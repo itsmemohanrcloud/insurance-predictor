@@ -1,34 +1,80 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
+#Libraries used
 
-This is a temporary script file.
-"""
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from pylab import rcParams
 
-df_data = pd.read_csv('CustomerChurnDataset.csv')
+#Read Dataset
+
+data = pd.read_csv('CustomerChurnTestDataset.csv')
 #df_data.head(10)
 
-df_data.info()
+#Data Plot
+
+customerChurn=data.groupby('Age').count()
+plt.bar(customerChurn.index.values, customerChurn['Left'])
+plt.xlabel('Age')
+plt.ylabel('Left')
+plt.show()
+data.Left.value_counts()
+
+customerChurn=data.groupby('Referred Friends').count()
+plt.bar(customerChurn.index.values, customerChurn['Left'])
+plt.xlabel('Referred Friends')
+plt.ylabel('Left')
+plt.show()
+
+customerChurn=data.groupby('Term Duration').count()
+plt.bar(customerChurn.index.values, customerChurn['Left'])
+plt.xlabel('Term Duration')
+plt.ylabel('Left')
+plt.show()
+
+customerChurn=data.groupby('Critical Customer Complaints').count()
+plt.bar(customerChurn.index.values, customerChurn['Left'])
+plt.xlabel('Critical Customer Complaints')
+plt.ylabel('Left')
+plt.show()
+
+customerChurn=data.groupby('Gender').count()
+plt.bar(customerChurn.index.values, customerChurn['Left'])
+plt.xlabel('Gender')
+plt.ylabel('Left')
+plt.show()
 
 
-df_data['Insurance Plan Type'].replace(['Individual','Family'],[0,1],inplace=True)
-df_data['Martial Status'].replace(['Unmarried','Married'],[1,0],inplace=True)
-df_data['Gender'].replace(['Male','Female'],[1,0],inplace=True)
-df_data['competitor Equivalent offer'].replace(['yes','No'],[1,0],inplace=True)
-df_data['Referred Friends'].replace(['yes','No'],[1,0],inplace=True)
-df_data['Critical Customer Complaints'].replace(['yes','No'],[1,0],inplace=True)
+customerChurn=data.groupby('Martial Status').count()
+plt.bar(customerChurn.index.values, customerChurn['Left'])
+plt.xlabel('Martial Status')
+plt.ylabel('Left')
+plt.show()
+
+
+data.info()
+
+#Finding How much customer Left
+data.Left.value_counts()
+
+
+#Converting categorical data into numeric ones
+data['Insurance Plan Type'].replace(['Individual','Family'],[0,1],inplace=True)
+data['Martial Status'].replace(['Unmarried','Married'],[1,0],inplace=True)
+data['Gender'].replace(['Male','Female'],[1,0],inplace=True)
+data['competitor Equivalent offer'].replace(['yes','No'],[1,0],inplace=True)
+data['Referred Friends'].replace(['yes','No'],[1,0],inplace=True)
+data['Critical Customer Complaints'].replace(['yes','No'],[1,0],inplace=True)
+data['Customer Satisfaction'].replace(['Satisfied','Dissatisfied'],[1,0],inplace=True)
 
 
 
-df_data['competitor Equivalent offer'] = pd.to_numeric(df_data['Referred Friends'], errors = 'coerce')
-df_data.loc[df_data['competitor Equivalent offer'].isna()==True]
-df_data[df_data['competitor Equivalent offer'].isna()==True] = 0
+data['competitor Equivalent offer'] = pd.to_numeric(data['Referred Friends'], errors = 'coerce')
+data.loc[data['competitor Equivalent offer'].isna()==True]
+data[data['competitor Equivalent offer'].isna()==True] = 0
 
-corr = df_data.corr()
+#heatMap Depiction
+corr = data.corr()
 sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels=corr.columns.values, annot = True, annot_kws={'size':12})
 heat_map=plt.gcf()
 heat_map.set_size_inches(20,15)
@@ -39,16 +85,17 @@ plt.show()
 
 
 from sklearn.model_selection import train_test_split
-train, test = train_test_split(df_data, test_size = 0.30)
+train, test = train_test_split(data, test_size = 0.30)
 
-train_y = train['Churn']
-test_y = test['Churn']
+train_y = train['Left']
+test_y = test['Left']
 
 train_x = train
-train_x.pop('Churn')
+train_x.pop('Left')
 test_x = test
-test_x.pop('Churn')
+test_x.pop('Left')
 
+#Start Logistic Regression
 
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.linear_model import LogisticRegression
@@ -62,23 +109,24 @@ print('Regression: ' + str(logisticRegr.coef_))
 print('Accuracy of logistic regression classifier on test set: {:.2f}'.format(logisticRegr.score(test_x, test_y)))
 print(classification_report(test_y, test_y_pred))
  
-confusion_matrix_df = pd.DataFrame(confusion_matrix, ('No churn', 'Churn'), ('No churn', 'Churn'))
+confusion_matrix_df = pd.DataFrame(confusion_matrix, ('Not Left', 'Left'), ('Not Left', 'Left'))
 heatmap = sns.heatmap(confusion_matrix_df, annot=True, annot_kws={"size": 20}, fmt="d")
 heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right', fontsize = 14)
 heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right', fontsize = 14)
-plt.ylabel('True label', fontsize = 14)
-plt.xlabel('Predicted label', fontsize = 14)
+plt.ylabel('Predicted label', fontsize = 14)
+plt.xlabel('True label', fontsize = 14)
 
 # churn count
 
-df_data['Churn'].value_counts()
+data['Left'].value_counts()
+
+
 
 #balancing churn dataset using upsampling
-
 from sklearn.utils import resample
 
-data_majority = df_data[df_data['Churn']==0]
-data_minority = df_data[df_data['Churn']==1]
+data_majority = data[data['Left']==0]
+data_minority = data[data['Left']==1]
 
 data_minority_upsampled = resample(data_minority,replace=True,
 n_samples=13, #same number of samples as majority classe
@@ -86,19 +134,19 @@ random_state=1) #set the seed for random resampling
 # Combine resampled results
 data_upsampled = pd.concat([data_majority, data_minority_upsampled])
 
-data_upsampled['Churn'].value_counts()
+data_upsampled['Left'].value_counts()
 
  #working on balanced dataset after upsampling
 
 train, test = train_test_split(data_upsampled, test_size = 0.25)
  
-train_y_upsampled = train['Churn']
-test_y_upsampled = test['Churn']
+train_y_upsampled = train['Left']
+test_y_upsampled = test['Left']
  
 train_x_upsampled = train
-train_x_upsampled.pop('Churn')
+train_x_upsampled.pop('Left')
 test_x_upsampled = test
-test_x_upsampled.pop('Churn')
+test_x_upsampled.pop('Left')
  
 logisticRegr_balanced = LogisticRegression()
 logisticRegr_balanced.fit(X=train_x_upsampled, y=train_y_upsampled)
@@ -137,6 +185,7 @@ print('Balanced model AUROC: ' + str(roc_auc_score(test_y_upsampled, test_y_prob
 
 # end of logistic regression
 
+
 #Decision tree
 
 from sklearn import tree
@@ -153,7 +202,7 @@ decisionTree = decisionTree.fit(X=train_x, y=train_y)
 # Generate PDF visual of decision tree
 churnTree = tree.export_graphviz(decisionTree, out_file=None, 
                          feature_names = list(train_x.columns.values),  
-                         class_names = ['No churn', 'Churn'],
+                         class_names = ['No Left', 'Left'],
                          filled=True, rounded=True,  
                          special_characters=True)  
 graph = graphviz.Source(churnTree)
